@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>围起来 · 桌面围棋</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%235a1d14'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23e9c46a' font-family='serif'>弈</text></svg>" />
+    <link rel="stylesheet" href="/src/ui/style.css" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="围棋棋盘"></canvas>
+
+    <div id="winbar" role="img" aria-label="胜率">
+      <span class="side red" id="win-b">黑 50%</span>
+      <div class="bar"><div class="fill" id="win-fill"></div><div class="mid"></div></div>
+      <span class="side black" id="win-w">白 50%</span>
+    </div>
+
+    <section class="panel left" id="controls" aria-label="设置">
+      <header>
+        <span class="seal" aria-hidden="true">弈</span>
+        <h1>围起来</h1>
+        <span id="selftest" class="badge ok" title="规则引擎自检通过"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4l2.4 2.4 4.6-5.3" /></svg>自检</span>
+        <button id="btn-record" class="ghost narrow-only" title="棋谱">战报</button>
+        <button id="btn-fold" class="ghost" title="收起/展开设置">收起来</button>
+      </header>
+      <div class="row seed">
+        <span class="k">种子</span><code id="seed">------</code>
+        <button id="btn-new">新一局</button>
+        <button id="btn-replay" title="按原局的设置改动和你的落子精确重放">重演一遍</button>
+      </div>
+      <div class="row play">
+        <button id="btn-pause" class="primary" aria-pressed="false">暂停</button>
+        <button id="btn-pass" class="ghost seated" title="轮到你时，不想下了就停一手">停一手</button>
+        <label class="check"><input type="checkbox" id="auto-next" checked />下完自动开下一局</label>
+      </div>
+      <div class="more">
+        <label class="slider"><span>速度</span><input type="range" id="speed" min="0.25" max="3" step="0.05" value="1" /><output id="speed-out">1.0×</output></label>
+        <label class="slider" title="电脑走棋有多爱冒险：越往右越容易走错，也越容易抓住机会"><span>爱冒险</span><input type="range" id="temp" min="0" max="1" step="0.01" value="0.35" /><output id="temp-out">稳重</output></label>
+        <div class="fields">
+          <label class="field"><span>电脑多厉害</span>
+            <select id="depth"><option value="2">2 一般</option><option value="3" selected>3 厉害</option><option value="4">4 特别厉害（更慢）</option></select>
+          </label>
+          <label class="field"><span>看棋的角度</span>
+            <select id="camera"><option value="auto" selected>自动跟着看</option><option value="free">自己转着看</option><option value="top">从上往下看</option></select>
+          </label>
+          <label class="field red"><span>黑方</span>
+            <select id="ctl-b"><option value="ai" selected>电脑下</option><option value="human">我来下</option></select>
+          </label>
+          <label class="field black"><span>白方</span>
+            <select id="ctl-w"><option value="ai" selected>电脑下</option><option value="human">我来下</option></select>
+          </label>
+        </div>
+        <details class="hint">
+          <summary>玩法提示 · 小朋友版</summary>
+          <p>把黑方或白方换成「我来下」，就能亲手下啦。轮到你时，点一个交叉点放下一颗子。</p>
+          <p>觉得没好棋了就点「停一手」，两边都停了就数地盘。鼠标右键拖一拖转桌子，空格键暂停。手机上用手指转、双指缩放。</p>
+        </details>
+        <details class="hint rules">
+          <summary>围棋规则 · 小朋友版</summary>
+          <div class="roles">
+            <i>● 黑子</i><i>○ 白子</i><i>气</i><i>提子</i><i>地盘</i>
+          </div>
+          <p>黑白轮流放子，放在交叉点上。一颗子上下左右的空点叫「气」，气全被占住，就被提走啦。</p>
+          <p>把对方的棋子团团围住，就能提掉它们。自己进去也没气的点不能下；「打劫」的地方要隔一手才能提回来。</p>
+          <p>两边都停一手就下完啦，数一数谁围的交叉点多，谁就赢！白棋会先贴 5.5 个点给黑棋作补偿。</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="panel right" id="record" aria-label="战报">
+      <div class="armies">
+        <div class="army red"><b>黑方</b><span id="army-b">—</span></div>
+        <div class="army black"><b>白方</b><span id="army-w">—</span></div>
+      </div>
+      <div id="status" class="status" role="status">棋子站好队，马上开战</div>
+      <ol id="moves" class="moves"></ol>
+    </section>
+
+    <div id="comment" class="comment" aria-live="polite"><span id="comment-text">棋盘已经摆好，黑白两边准备开工</span><small id="comment-sub"></small></div>
+    <div id="end" class="end hidden"><div class="banner"><div class="title" id="banner-title"></div><div class="rule"></div><div class="sub" id="banner-sub"></div>
+      <div class="after"><button id="btn-again" class="primary">再来一盘</button><button id="btn-review" class="ghost">回看棋盘</button></div>
+    </div></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
